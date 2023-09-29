@@ -11,7 +11,6 @@ app = flask.Flask(__name__)
 def main():
     token = flask.request.args.get('token')
     zone = flask.request.args.get('zone')
-    record = flask.request.args.get('record')
     ipv4 = flask.request.args.get('ipv4')
     ipv6 = flask.request.args.get('ipv6')
     cf = CloudFlare.CloudFlare(token=token)
@@ -29,18 +28,16 @@ def main():
         if not zones:
             return flask.jsonify({'status': 'error', 'message': 'Zone {} does not exist.'.format(zone)}), 404
 
-        record_zone_concat = '{}.{}'.format(record, zone) if record is not None else zone
-
         a_record = cf.zones.dns_records.get(zones[0]['id'], params={
-                                            'name': record_zone_concat, 'match': 'all', 'type': 'A'})
+                                            'name': '{}'.format(zone), 'match': 'all', 'type': 'A'})
         aaaa_record = cf.zones.dns_records.get(zones[0]['id'], params={
-                                            'name': record_zone_concat, 'match': 'all', 'type': 'AAAA'})
+                                               'name': '{}'.format(zone), 'match': 'all', 'type': 'AAAA'})
 
         if ipv4 is not None and not a_record:
-            return flask.jsonify({'status': 'error', 'message': f'A record for {record_zone_concat} does not exist.'}), 404
+            return flask.jsonify({'status': 'error', 'message': 'A record for {} does not exist.'.format(zone)}), 404
 
         if ipv6 is not None and not aaaa_record:
-            return flask.jsonify({'status': 'error', 'message': f'AAAA record for {record_zone_concat} does not exist.'}), 404
+            return flask.jsonify({'status': 'error', 'message': 'AAAA record for {} does not exist.'.format(zone)}), 404
 
         if ipv4 is not None and a_record[0]['content'] != ipv4:
             cf.zones.dns_records.put(zones[0]['id'], a_record[0]['id'], data={
