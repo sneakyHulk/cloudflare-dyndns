@@ -46,12 +46,12 @@ def main():
             return flask.jsonify({'status': 'error', 'message': 'AAAA record for {} does not exist.'.format(zone)}), 404
 
         if ipv4 is not None and a_record[0]['content'] != ipv4:
-            print('name:', a_record[0]['name'], 'type: A', 'content:', ipv4, 'proxied:', a_record[0]['proxied'], 'ttl:' a_record[0]['ttl'])
+            print('name:', a_record[0]['name'], 'type: A', 'content:', ipv4, 'proxied:', a_record[0]['proxied'], 'ttl:', a_record[0]['ttl'])
             cf.zones.dns_records.put(zones[0]['id'], a_record[0]['id'], data={
                                      'name': a_record[0]['name'], 'type': 'A', 'content': ipv4, 'proxied': a_record[0]['proxied'], 'ttl': a_record[0]['ttl']})
 
         if ipv6 is not None and aaaa_record[0]['content'] != ipv6:
-            print('name:', aaaa_record[0]['name'], 'type: AAAA', 'content:', ipv6, 'proxied:', aaaa_record[0]['proxied'], 'ttl:' aaaa_record[0]['ttl'])
+            print('name:', aaaa_record[0]['name'], 'type: AAAA', 'content:', ipv6, 'proxied:', aaaa_record[0]['proxied'], 'ttl:', aaaa_record[0]['ttl'])
             cf.zones.dns_records.put(zones[0]['id'], aaaa_record[0]['id'], data={
                                      'name': aaaa_record[0]['name'], 'type': 'AAAA', 'content': ipv6, 'proxied': aaaa_record[0]['proxied'], 'ttl': aaaa_record[0]['ttl']})
     except CloudFlare.exceptions.CloudFlareAPIError as e:
