@@ -17,5 +17,26 @@ Create a [Cloudflare API token](https://dash.cloudflare.com/profile/api-tokens) 
 Start cloudflare-dyndns:
 
 ```bash
-docker run -p 80:80 ghcr.io/l480/cloudflare-dyndns:latest
+docker run -p 9017:80 ghcr.io/l480/cloudflare-dyndns:latest
+```
+
+Or start with docker-compose:
+
+```
+version: '3.7'
+
+services:
+  dyndns:
+    container_name: dyndns
+    image: ghcr.io/sneakyhulk/cloudflare-dyndns:latest
+    hostname: dyndns
+    restart: unless-stopped
+    ports:
+      - 9017:80
+```
+
+The update URL for the FRITZ!Box results to:
+
+```
+http://<server host name or ip address>:9017?token=<pass>&zone=<domain>&ipv4=<ipaddr>&ipv6=<ip6addr>
 ```
