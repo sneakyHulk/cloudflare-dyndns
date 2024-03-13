@@ -9,6 +9,7 @@ app = flask.Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def main():
+    print('main()', file=sys.stderr)
     token = flask.request.args.get('token')
     zone = flask.request.args.get('zone')
     ipv4 = flask.request.args.get('ipv4')
