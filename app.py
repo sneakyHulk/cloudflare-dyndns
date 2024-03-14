@@ -7,7 +7,7 @@ import sys
 app = flask.Flask(__name__)
 
 
-@app.route('/dyndns', methods=['GET'])
+@app.route('/', methods=['GET'])
 def main():
     print('main()', file=sys.stderr)
     token = flask.request.args.get('token')
