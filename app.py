@@ -24,7 +24,7 @@ def main():
     zone = request.args.get('zone')
     ipv4 = request.args.get('ipv4')
     ipv6 = request.args.get('ipv6')
-    cf = CloudFlare.CloudFlare(token=token)
+    cf = CloudFlare(token=token)
 
     if not token:
         print('Missing token URL parameter.', file=sys.stderr)
@@ -69,7 +69,7 @@ def main():
             cf.zones.dns_records.put(zones[0]['id'], aaaa_record[0]['id'], data={
                 'name': aaaa_record[0]['name'], 'type': 'AAAA', 'content': ipv6, 'proxied': aaaa_record[0]['proxied'],
                 'ttl': aaaa_record[0]['ttl']})
-    except CloudFlare.exceptions.CloudFlareAPIError as e:
+    except exceptions.CloudFlareAPIError as e:
         print(str(e), file=sys.stderr)
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
