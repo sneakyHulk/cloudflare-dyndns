@@ -19,6 +19,7 @@ def handle_error(e):
 
 @app.route('/favicon.ico')
 def favicon():
+    print('Favicon!', file=sys.stderr)
     return flask.send_from_directory(os.path.join(app.root_path, 'static'),
                                      'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
