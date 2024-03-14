@@ -17,13 +17,6 @@ def handle_error(e):
     return flask.jsonify(error=str(e)), code
 
 
-@app.route('/favicon.ico')
-def favicon():
-    print('Favicon!', file=sys.stderr)
-    return flask.send_from_directory(os.path.join(app.root_path, 'static'),
-                                     'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
-
 @app.route('/', methods=['GET'])
 def main():
     print('main()', file=sys.stderr)
@@ -88,6 +81,13 @@ def main():
 def healthz():
     print('Health check!', file=sys.stderr)
     return flask.jsonify({'status': 'success', 'message': 'OK'}), 200
+
+
+@app.route('/favicon.ico', methods=['GET'])
+def favicon():
+    print('Favicon!', file=sys.stderr)
+    return flask.send_from_directory(os.path.join(app.root_path, 'static'),
+                                     'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 app.secret_key = os.urandom(24)
