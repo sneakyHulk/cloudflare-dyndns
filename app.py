@@ -17,6 +17,12 @@ def handle_error(e):
     return flask.jsonify(error=str(e)), code
 
 
+@app.route('/favicon.ico')
+def favicon():
+    return flask.send_from_directory(os.path.join(app.root_path, 'static'),
+                                     'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+
 @app.route('/', methods=['GET'])
 def main():
     print('main()', file=sys.stderr)
