@@ -7,6 +7,16 @@ import sys
 app = flask.Flask(__name__)
 
 
+@app.errorhandler(Exception)
+def handle_error(e):
+    print('ERROR!', file=sys.stderr)
+    code = 500
+    if isinstance(e, flask.HTTPException):
+        code = e.code
+    print('Code: {}'.format(code), file=sys.stderr)
+    return flask.jsonify(error=str(e)), code
+
+
 @app.route('/', methods=['GET'])
 def main():
     print('main()', file=sys.stderr)
@@ -34,9 +44,9 @@ def main():
             return flask.jsonify({'status': 'error', 'message': 'Zone {} does not exist.'.format(zone)}), 404
 
         a_record = cf.zones.dns_records.get(zones[0]['id'], params={
-                                            'name': '{}'.format(zone), 'match': 'all', 'type': 'A'})
+            'name': '{}'.format(zone), 'match': 'all', 'type': 'A'})
         aaaa_record = cf.zones.dns_records.get(zones[0]['id'], params={
-                                               'name': '{}'.format(zone), 'match': 'all', 'type': 'AAAA'})
+            'name': '{}'.format(zone), 'match': 'all', 'type': 'AAAA'})
 
         if ipv4 is not None and not a_record:
             print('A record for {} does not exist.'.format(zone), file=sys.stderr)
@@ -47,14 +57,18 @@ def main():
             return flask.jsonify({'status': 'error', 'message': 'AAAA record for {} does not exist.'.format(zone)}), 404
 
         if ipv4 is not None and a_record[0]['content'] != ipv4:
-            print('name:', a_record[0]['name'], 'type: A', 'content:', ipv4, 'proxied:', a_record[0]['proxied'], 'ttl:', a_record[0]['ttl'], file=sys.stderr)
+            print('name:', a_record[0]['name'], 'type: A', 'content:', ipv4, 'proxied:', a_record[0]['proxied'], 'ttl:',
+                  a_record[0]['ttl'], file=sys.stderr)
             cf.zones.dns_records.put(zones[0]['id'], a_record[0]['id'], data={
-                                     'name': a_record[0]['name'], 'type': 'A', 'content': ipv4, 'proxied': a_record[0]['proxied'], 'ttl': a_record[0]['ttl']})
+                'name': a_record[0]['name'], 'type': 'A', 'content': ipv4, 'proxied': a_record[0]['proxied'],
+                'ttl': a_record[0]['ttl']})
 
         if ipv6 is not None and aaaa_record[0]['content'] != ipv6:
-            print('name:', aaaa_record[0]['name'], 'type: AAAA', 'content:', ipv6, 'proxied:', aaaa_record[0]['proxied'], 'ttl:', aaaa_record[0]['ttl'], file=sys.stderr)
+            print('name:', aaaa_record[0]['name'], 'type: AAAA', 'content:', ipv6, 'proxied:',
+                  aaaa_record[0]['proxied'], 'ttl:', aaaa_record[0]['ttl'], file=sys.stderr)
             cf.zones.dns_records.put(zones[0]['id'], aaaa_record[0]['id'], data={
-                                     'name': aaaa_record[0]['name'], 'type': 'AAAA', 'content': ipv6, 'proxied': aaaa_record[0]['proxied'], 'ttl': aaaa_record[0]['ttl']})
+                'name': aaaa_record[0]['name'], 'type': 'AAAA', 'content': ipv6, 'proxied': aaaa_record[0]['proxied'],
+                'ttl': aaaa_record[0]['ttl']})
     except CloudFlare.exceptions.CloudFlareAPIError as e:
         print(str(e), file=sys.stderr)
         return flask.jsonify({'status': 'error', 'message': str(e)}), 500
