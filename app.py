@@ -86,8 +86,7 @@ def healthz():
 @app.route('/favicon.ico', methods=['GET'])
 def favicon():
     print('Favicon!', file=sys.stderr)
-    return flask.send_from_directory(os.path.join(app.root_path, 'static'),
-                                     'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return flask.redirect(flask.url_for('static', filename='favicon.ico'), code=302)
 
 
 app.secret_key = os.urandom(24)
