@@ -1,47 +1,47 @@
-import os
-import CloudFlare
+from CloudFlare import CloudFlare, exceptions
 import waitress
-import flask
+from werkzeug.exceptions import HTTPException
+from flask import Flask, send_from_directory, jsonify, request
 import sys
+import os
 
-app = flask.Flask(__name__)
+app = Flask(__name__)
 
 
 @app.errorhandler(Exception)
 def handle_error(e):
-    print('ERROR!', file=sys.stderr)
     code = 500
-    if isinstance(e, flask.HTTPException):
+    if isinstance(e, HTTPException):
         code = e.code
-    print('Code: {}'.format(code), file=sys.stderr)
-    return flask.jsonify(error=str(e)), code
+    print('Error: {}'.format(str(e)), file=sys.stderr)
+    return jsonify(error=str(e)), code
 
 
 @app.route('/', methods=['GET'])
 def main():
-    print('main()', file=sys.stderr)
-    token = flask.request.args.get('token')
-    zone = flask.request.args.get('zone')
-    ipv4 = flask.request.args.get('ipv4')
-    ipv6 = flask.request.args.get('ipv6')
+    print('Main!', file=sys.stderr)
+    token = request.args.get('token')
+    zone = request.args.get('zone')
+    ipv4 = request.args.get('ipv4')
+    ipv6 = request.args.get('ipv6')
     cf = CloudFlare.CloudFlare(token=token)
 
     if not token:
         print('Missing token URL parameter.', file=sys.stderr)
-        return flask.jsonify({'status': 'error', 'message': 'Missing token URL parameter.'}), 400
+        return jsonify({'status': 'error', 'message': 'Missing token URL parameter.'}), 400
     if not zone:
         print('Missing zone URL parameter.', file=sys.stderr)
-        return flask.jsonify({'status': 'error', 'message': 'Missing zone URL parameter.'}), 400
+        return jsonify({'status': 'error', 'message': 'Missing zone URL parameter.'}), 400
     if not ipv4 and not ipv6:
         print('Missing ipv4 or ipv6 URL parameter.', file=sys.stderr)
-        return flask.jsonify({'status': 'error', 'message': 'Missing ipv4 or ipv6 URL parameter.'}), 400
+        return jsonify({'status': 'error', 'message': 'Missing ipv4 or ipv6 URL parameter.'}), 400
 
     try:
         zones = cf.zones.get(params={'name': zone})
 
         if not zones:
             print('Zone {} does not exist.'.format(zone), file=sys.stderr)
-            return flask.jsonify({'status': 'error', 'message': 'Zone {} does not exist.'.format(zone)}), 404
+            return jsonify({'status': 'error', 'message': 'Zone {} does not exist.'.format(zone)}), 404
 
         a_record = cf.zones.dns_records.get(zones[0]['id'], params={
             'name': '{}'.format(zone), 'match': 'all', 'type': 'A'})
@@ -50,11 +50,11 @@ def main():
 
         if ipv4 is not None and not a_record:
             print('A record for {} does not exist.'.format(zone), file=sys.stderr)
-            return flask.jsonify({'status': 'error', 'message': 'A record for {} does not exist.'.format(zone)}), 404
+            return jsonify({'status': 'error', 'message': 'A record for {} does not exist.'.format(zone)}), 404
 
         if ipv6 is not None and not aaaa_record:
             print('AAAA record for {} does not exist.'.format(zone), file=sys.stderr)
-            return flask.jsonify({'status': 'error', 'message': 'AAAA record for {} does not exist.'.format(zone)}), 404
+            return jsonify({'status': 'error', 'message': 'AAAA record for {} does not exist.'.format(zone)}), 404
 
         if ipv4 is not None and a_record[0]['content'] != ipv4:
             print('name:', a_record[0]['name'], 'type: A', 'content:', ipv4, 'proxied:', a_record[0]['proxied'], 'ttl:',
@@ -71,22 +71,23 @@ def main():
                 'ttl': aaaa_record[0]['ttl']})
     except CloudFlare.exceptions.CloudFlareAPIError as e:
         print(str(e), file=sys.stderr)
-        return flask.jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
     print('Update successful.', file=sys.stderr)
-    return flask.jsonify({'status': 'success', 'message': 'Update successful.'}), 200
+    return jsonify({'status': 'success', 'message': 'Update successful.'}), 200
 
 
 @app.route('/healthz', methods=['GET'])
 def healthz():
     print('Health check!', file=sys.stderr)
-    return flask.jsonify({'status': 'success', 'message': 'OK'}), 200
+    return jsonify({'status': 'success', 'message': 'OK'}), 200
 
 
 @app.route('/favicon.ico', methods=['GET'])
 def favicon():
     print('Favicon!', file=sys.stderr)
-    return flask.redirect(flask.url_for('static', filename='favicon.ico'), code=302)
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 app.secret_key = os.urandom(24)
