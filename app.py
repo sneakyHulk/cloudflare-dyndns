@@ -14,6 +14,7 @@ def handle_error(e):
     if isinstance(e, HTTPException):
         code = e.code
     print('Error: {}'.format(str(e)), file=sys.stderr)
+    print('Route: {}'.format(request.full_path), file=sys.stderr)
     return jsonify(error=str(e)), code
 
 
