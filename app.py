@@ -23,6 +23,7 @@ def main():
     print('Main!', file=sys.stderr)
     token = request.args.get('token')
     zone = request.args.get('zone')
+    record_name = request.args.get('record')
     ipv4 = request.args.get('ipv4')
     ipv6 = request.args.get('ipv6')
     cf = CloudFlare(token=token)
@@ -36,6 +37,9 @@ def main():
     if not ipv4 and not ipv6:
         print('Missing ipv4 or ipv6 URL parameter.', file=sys.stderr)
         return jsonify({'status': 'error', 'message': 'Missing ipv4 or ipv6 URL parameter.'}), 400
+    if not record_name:
+    	print('No record name specified. Use zone name {} record'.format(zone), file=sys.stderr)
+    	record_name = zone
 
     try:
         zones = cf.zones.get(params={'name': zone})
@@ -45,16 +49,16 @@ def main():
             return jsonify({'status': 'error', 'message': 'Zone {} does not exist.'.format(zone)}), 404
 
         a_record = cf.zones.dns_records.get(zones[0]['id'], params={
-            'name': '{}'.format(zone), 'match': 'all', 'type': 'A'})
+            'name': '{}'.format(record_name), 'match': 'all', 'type': 'A'})
         aaaa_record = cf.zones.dns_records.get(zones[0]['id'], params={
-            'name': '{}'.format(zone), 'match': 'all', 'type': 'AAAA'})
+            'name': '{}'.format(record_name), 'match': 'all', 'type': 'AAAA'})
 
         if ipv4 is not None and not a_record:
-            print('A record for {} does not exist.'.format(zone), file=sys.stderr)
+            print('A record for {} does not exist.'.format(record_name), file=sys.stderr)
             return jsonify({'status': 'error', 'message': 'A record for {} does not exist.'.format(zone)}), 404
 
         if ipv6 is not None and not aaaa_record:
-            print('AAAA record for {} does not exist.'.format(zone), file=sys.stderr)
+            print('AAAA record for {} does not exist.'.format(record_name), file=sys.stderr)
             return jsonify({'status': 'error', 'message': 'AAAA record for {} does not exist.'.format(zone)}), 404
 
         if ipv4 is not None and a_record[0]['content'] != ipv4:

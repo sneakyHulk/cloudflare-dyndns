@@ -23,7 +23,6 @@ docker run -p 9017:80 ghcr.io/l480/cloudflare-dyndns:latest
 Or start with docker-compose:
 
 ```
-version: '3.7'
 
 services:
   dyndns:
@@ -38,5 +37,5 @@ services:
 The update URL for the FRITZ!Box results to:
 
 ```
-http://<server host name or ip address>:9017?token=<pass>&zone=<domain>&ipv4=<ipaddr>&ipv6=<ip6addr>
+http://<server host name or ip address>:9017?token=<pass>&zone=<zone>&record=<username>&ipv4=<ipaddr>&ipv6=<ip6addr>
 ```
